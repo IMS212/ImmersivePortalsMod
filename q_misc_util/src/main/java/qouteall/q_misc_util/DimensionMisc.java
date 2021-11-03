@@ -62,14 +62,14 @@ public class DimensionMisc {
      * Copied from {@link DimensionType}
      */
     private static ChunkGenerator createNetherGenerator(Registry<Biome> biomeRegistry, Registry<ChunkGeneratorSettings> chunkGeneratorSettingsRegistry, long seed) {
-        return new NoiseChunkGenerator(MultiNoiseBiomeSource.Preset.NETHER.getBiomeSource(biomeRegistry, seed), seed, () -> {
+        return new NoiseChunkGenerator(DynamicRegistryManager.create().get(Registry.NOISE_WORLDGEN), MultiNoiseBiomeSource.Preset.NETHER.getBiomeSource(biomeRegistry), seed, () -> {
             return (ChunkGeneratorSettings) chunkGeneratorSettingsRegistry.getOrThrow(ChunkGeneratorSettings.NETHER);
         });
     }
     
     private static ChunkGenerator createEndGenerator(Registry<Biome> biomeRegistry, Registry<ChunkGeneratorSettings> chunkGeneratorSettingsRegistry, long seed) {
-        return new NoiseChunkGenerator(new TheEndBiomeSource(biomeRegistry, seed), seed, () -> {
-            return (ChunkGeneratorSettings) chunkGeneratorSettingsRegistry.getOrThrow(ChunkGeneratorSettings.END);
+        return new NoiseChunkGenerator(DynamicRegistryManager.create().get(Registry.NOISE_WORLDGEN), new TheEndBiomeSource(biomeRegistry, seed), seed, () -> {
+            return (ChunkGeneratorSettings)chunkGeneratorSettingsRegistry.getOrThrow(ChunkGeneratorSettings.END);
         });
     }
     
