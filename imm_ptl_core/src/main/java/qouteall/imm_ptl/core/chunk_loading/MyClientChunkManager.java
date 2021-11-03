@@ -1,5 +1,6 @@
 package qouteall.imm_ptl.core.chunk_loading;
 
+import net.minecraft.network.packet.s2c.play.ChunkData;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.q_misc_util.my_util.SignalArged;
@@ -27,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
+import java.util.function.Consumer;
 
 // allow storing chunks that are far away from the player
 @Environment(EnvType.CLIENT)
@@ -94,9 +96,8 @@ public class MyClientChunkManager extends ClientChunkManager {
     
     @Override
     public WorldChunk loadChunkFromPacket(
-        int x, int z, BiomeArray biomes,
-        PacketByteBuf buf, NbtCompound nbt, BitSet bitSet
-    ) {
+        int x, int z ,
+        PacketByteBuf buf, NbtCompound nbt, Consumer<ChunkData.BlockEntityVisitor> consumer) {
         long chunkPosLong = ChunkPos.toLong(x, z);
         
         WorldChunk worldChunk;
@@ -104,19 +105,11 @@ public class MyClientChunkManager extends ClientChunkManager {
         synchronized (chunkMap) {
             worldChunk = (WorldChunk) this.chunkMap.get(chunkPosLong);
             if (positionEquals(worldChunk, x, z)) {
-                worldChunk.loadFromPacket(biomes, buf, nbt, bitSet);
+                worldChunk.loadFromPacket(buf, nbt, consumer);
             }
             else {
-                if (biomes == null) {
-                    LOGGER.error(
-                        "Missing Biome Array: {} {} {} Client Biome May be Incorrect",
-                        world.getRegistryKey().getValue(), x, z
-                    );
-                    throw new RuntimeException("Null biome array");
-                }
-                
-                worldChunk = new WorldChunk(this.world, chunkPos, biomes);
-                worldChunk.loadFromPacket(biomes, buf, nbt, bitSet);
+                worldChunk = new WorldChunk(this.world, chunkPos);
+                worldChunk.loadFromPacket(buf, nbt, consumer);
                 chunkMap.put(chunkPosLong, worldChunk);
             }
         }
@@ -129,7 +122,7 @@ public class MyClientChunkManager extends ClientChunkManager {
             ChunkSection chunkSection = chunkSections[yIndex];
             lightingProvider.setSectionStatus(
                 ChunkSectionPos.from(x, worldChunk.sectionIndexToCoord(yIndex), z),
-                ChunkSection.isEmpty(chunkSection)
+                chunkSection.isEmpty()
             );
         }
         
